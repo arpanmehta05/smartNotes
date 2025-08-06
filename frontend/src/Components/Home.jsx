@@ -11,6 +11,9 @@ import CreateNote from "./CreateNote";
 import EditModal from "./EditModal";
 import BinIcon from "../Icons/Bin";
 import ErrorModal from "./ErrorModal";
+import HomeIcon from "../Icons/HomeIcon";
+import { useNavigate } from "react-router-dom";
+import Sidebar from "./Sidebar";
 
 export default function Home() {
   const [notes, setNotes] = useState([]);
@@ -29,10 +32,20 @@ export default function Home() {
     message: "",
     onConfirm: null,
   });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("isAuthenticated");
+    navigate("/login");
+  }, [navigate]);
 
   // Update document title
   useEffect(() => {
     document.title = "Smartnotes - Your Intelligent Note-Taking App";
+    window.scrollTo(0, 0); // Always scroll to top on mount
   }, []);
 
   // --- Data Fetching ---
@@ -202,39 +215,42 @@ export default function Home() {
         onSearch={handleSearch}
         onToggleSelectMode={toggleSelectMode}
         isSelectMode={isSelectMode}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
       />
-
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {!isSelectMode && <CreateNote onNoteCreated={getNotes} />}
-          <main className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-6">
-            {notes.length > 0
-              ? notes.map((note) => (
-                  <NoteCard
-                    key={note._id}
-                    note={note}
-                    onEdit={handleEditNote}
-                    onDelete={handleDeleteNote}
-                    isSelectMode={isSelectMode}
-                    isSelected={selectedNotes.has(note._id)}
-                    onSelect={handleSelectNote}
-                  />
-                ))
-              : !searchQuery && (
-                  <div className="col-span-full text-center py-16">
-                    <div className="text-gray-400 text-6xl mb-4">📝</div>
-                    <p className="text-gray-500 text-xl mb-2">
-                      Your notebook is empty
-                    </p>
-                    <p className="text-gray-400">
-                      Create your first note to get started!
-                    </p>
-                  </div>
-                )}
-          </main>
+      {/* Sidebar removed as per user request */}
+      <div className="transition-all duration-300 ml-0">
+        <div className="min-h-screen bg-gray-50">
+          <div className="px-4 sm:px-6 lg:px-8 pt-8">
+            {!isSelectMode && <CreateNote onNoteCreated={getNotes} />}
+            <main className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-6">
+              {notes.length > 0
+                ? notes.map((note) => (
+                    <NoteCard
+                      key={note._id}
+                      note={note}
+                      onEdit={handleEditNote}
+                      onDelete={handleDeleteNote}
+                      isSelectMode={isSelectMode}
+                      isSelected={selectedNotes.has(note._id)}
+                      onSelect={handleSelectNote}
+                    />
+                  ))
+                : !searchQuery && (
+                    <div className="col-span-full text-center py-16">
+                      <div className="text-gray-400 text-6xl mb-4">📝</div>
+                      <p className="text-gray-500 text-xl mb-2">
+                        Your notebook is empty
+                      </p>
+                      <p className="text-gray-400">
+                        Create your first note to get started!
+                      </p>
+                    </div>
+                  )}
+            </main>
+          </div>
         </div>
       </div>
-
       {/* Bulk Delete Action Bar */}
       {isSelectMode && selectedNotes.size > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50">
@@ -252,7 +268,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
       {/* Expanded Note Modal */}
       {expandedNote && (
         <EditModal
@@ -262,14 +277,12 @@ export default function Home() {
           onUpdateSuccess={handleUpdateSuccess}
         />
       )}
-
       {/* Error Modal */}
       <ErrorModal
         isOpen={!!error}
         message={error}
         onClose={() => setError(null)}
       />
-
       {confirmModal.open && (
         <div
           className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"

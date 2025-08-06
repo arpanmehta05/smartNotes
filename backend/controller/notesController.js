@@ -29,6 +29,7 @@ exports.createNote = async (req, res) => {
       title: req.body.title,
       content: req.body.content,
       tags: tagIds,
+      user: req.user._id,
     });
     const savedNote = await newNote.save();
     const populatedNote = await noteModel
@@ -44,7 +45,7 @@ exports.createNote = async (req, res) => {
 exports.getAllNotes = async (req, res) => {
   try {
     const { tag, date, deleted } = req.query;
-    let filter = {};
+    let filter = { user: req.user._id };
     if (tag) {
       filter.tags = tag;
     }
@@ -69,7 +70,9 @@ exports.getAllNotes = async (req, res) => {
 exports.getNotesById = async (req, res) => {
   try {
     const { id } = req.params;
-    const note = await noteModel.findById(id).populate("tags");
+    const note = await noteModel
+      .findOne({ _id: id, user: req.user._id })
+      .populate("tags");
     if (!note) {
       return res.status(404).json({ message: "Note not found" });
     }
@@ -105,7 +108,10 @@ exports.updateNote = async (req, res) => {
     updates.updatedAt = new Date();
 
     const updatedNote = await noteModel
-      .findByIdAndUpdate(id, updates, { new: true, runValidators: true })
+      .findOneAndUpdate({ _id: id, user: req.user._id }, updates, {
+        new: true,
+        runValidators: true,
+      })
       .populate("tags");
     if (!updatedNote) {
       return res.status(404).json({ message: "Note not found" });
@@ -120,7 +126,7 @@ exports.updateNote = async (req, res) => {
 exports.softDeleteNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const note = await noteModel.findById(id);
+    const note = await noteModel.findOne({ _id: id, user: req.user._id });
     if (!note) {
       return res.status(404).json({ message: "Note not found" });
     }
@@ -143,6 +149,7 @@ exports.searchNotesByKeyword = async (req, res) => {
     const notes = await noteModel
       .find({
         deleted: false,
+        user: req.user._id,
         $or: [
           { title: { $regex: keyword, $options: "i" } },
           { content: { $regex: keyword, $options: "i" } },
@@ -163,7 +170,7 @@ exports.BulkDeleteNotes = async (req, res) => {
       return res.status(400).json({ message: "Invalid notes IDs" });
     }
     const deletedNotes = await noteModel.updateMany(
-      { _id: { $in: notesIds } },
+      { _id: { $in: notesIds }, user: req.user._id },
       { $set: { deleted: true } }
     );
     const trashEntries = notesIds.map((id) => ({

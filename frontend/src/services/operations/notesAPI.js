@@ -2,6 +2,56 @@ import { apiConnector } from "../apiConnector";
 import { endpoints } from "../apis";
 
 // =================================================================================
+//                                  AUTH API
+// =================================================================================
+
+/**
+ * Signs up a new user.
+ * @param {Object} formData - The user's registration data.
+ * @returns {Promise<Object>} A promise that resolves to the server's response.
+ */
+export const signup = async (formData) => {
+  try {
+    const { data } = await apiConnector("POST", endpoints.signup, formData);
+    return data;
+  } catch (error) {
+    console.error("Error signing up:", error);
+    throw new Error("Could not sign up.");
+  }
+};
+
+/**
+ * Logs in a user.
+ * @param {Object} formData - The user's login credentials.
+ * @returns {Promise<Object>} A promise that resolves to the server's response, including the token.
+ */
+export const login = async (formData) => {
+  try {
+    const { data } = await apiConnector("POST", endpoints.login, formData);
+    return data;
+  } catch (error) {
+    console.error("Error logging in:", error);
+    throw new Error("Could not log in.");
+  }
+};
+
+/**
+ * Sets a password for a Google-authenticated user.
+ * @param {Object} formData - The user's email, password, and confirmPassword.
+ * @returns {Promise<Object>} A promise that resolves to the server's response.
+ */
+export const setPassword = async (formData) => {
+  try {
+    const { data } = await apiConnector("POST", endpoints.setPassword, formData);
+    return data;
+  } catch (error) {
+    console.error("Error setting password:", error);
+    throw new Error("Could not set password.");
+  }
+};
+
+
+// =================================================================================
 //                                  NOTES API
 // =================================================================================
 

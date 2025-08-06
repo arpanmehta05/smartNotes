@@ -3,10 +3,13 @@ const { trashModel } = require("../model/trashModel");
 
 exports.getTrash = async (req, res) => {
   try {
-    const trashedItems = await trashModel
-      .find()
-      .populate("noteId", "title content");
-    res.status(200).json(trashedItems);
+    const trashedItems = await trashModel.find().populate({
+      path: "noteId",
+      match: { user: req.user._id },
+      select: "title content",
+    });
+    const filtered = trashedItems.filter((item) => item.noteId !== null);
+    res.status(200).json(filtered);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -18,11 +21,11 @@ exports.restoreTrash = async (req, res) => {
     const { noteId } = req.params;
     const restoredItem = await trashModel
       .findOne({ noteId })
-      .populate("noteId");
-    if (!restoredItem) {
+      .populate({ path: "noteId", match: { user: req.user._id } });
+    if (!restoredItem || !restoredItem.noteId) {
       return res.status(404).json({ message: "Item not found in trash" });
     }
-    const note = await noteModel.findById(noteId);
+    const note = await noteModel.findOne({ _id: noteId, user: req.user._id });
     if (!note) {
       return res.status(404).json({ message: "Note not found" });
     }
@@ -45,8 +48,12 @@ exports.deleteTrash = async (req, res) => {
     if (!deletedItem) {
       return res.status(404).json({ message: "Item not found in trash" });
     }
-    await trashModel.deleteMany({ noteId }); // Delete all trash entries for this note
-    await noteModel.findByIdAndDelete(noteId); // Permanently delete the note
+    const note = await noteModel.findOne({ _id: noteId, user: req.user._id });
+    if (!note) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+    await trashModel.deleteMany({ noteId });
+    await noteModel.findByIdAndDelete(noteId);
     res.status(200).json({ message: "Item deleted from trash successfully" });
   } catch (err) {
     console.error(err);

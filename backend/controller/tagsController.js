@@ -2,7 +2,7 @@ const { tagModel } = require("../model/tagsModel");
 
 exports.getAllTags = async (req, res) => {
   try {
-    const tags = await tagModel.find().sort({ name: 1 });
+    const tags = await tagModel.find({ user: req.user._id }).sort({ name: 1 });
     res.status(200).json(tags);
   } catch (err) {
     console.error("Error fetching tags:", err);
@@ -17,12 +17,12 @@ exports.createTag = async (req, res) => {
       return res.status(400).json({ message: "Tag name is required" });
     }
 
-    const existingTag = await tagModel.findOne({ name });
+    const existingTag = await tagModel.findOne({ name, user: req.user._id });
     if (existingTag) {
       return res.status(409).json({ message: "Tag already exists" });
     }
 
-    const newTag = new tagModel({ name });
+    const newTag = new tagModel({ name, user: req.user._id });
     const savedTag = await newTag.save();
     res.status(201).json(savedTag);
   } catch (err) {
@@ -34,7 +34,10 @@ exports.createTag = async (req, res) => {
 exports.deleteTag = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedTag = await tagModel.findByIdAndDelete(id);
+    const deletedTag = await tagModel.findOneAndDelete({
+      _id: id,
+      user: req.user._id,
+    });
     if (!deletedTag) {
       return res.status(404).json({ message: "Tag not found" });
     }

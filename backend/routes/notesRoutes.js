@@ -1,4 +1,6 @@
 const express = require("express");
+const router = express.Router();
+const auth = require("../middleware/auth");
 const {
   createNote,
   getNotesById,
@@ -8,14 +10,13 @@ const {
   searchNotesByKeyword,
   BulkDeleteNotes,
 } = require("../controller/notesController");
-const router = express.Router();
 
-router.post("/create", createNote);
-router.get("/notes/:id", getNotesById);
-router.get("/notes", getAllNotes);
-router.put("/update/:id", updateNote);
-router.delete("/softDelete/:id", softDeleteNote);
-router.get("/search/:keyword",searchNotesByKeyword);
-router.delete("/bulkDelete",BulkDeleteNotes);
+router.post("/create", auth, createNote);
+router.get("/notes/:id", auth, getNotesById);
+router.get("/notes", auth, getAllNotes);
+router.put("/update/:id", auth, updateNote);
+router.delete("/softDelete/:id", auth, softDeleteNote);
+router.get("/search/:keyword", auth, searchNotesByKeyword);
+router.delete("/bulkDelete", auth, BulkDeleteNotes);
 
 module.exports = router;

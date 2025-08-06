@@ -4,10 +4,11 @@ const {
   deleteTrash,
   restoreTrash,
 } = require("../controller/trashController");
+const auth = require("../middleware/auth");
 const router = express.Router();
 
-router.get("/alltrash", getTrash);
-router.delete("/delete/:noteId", deleteTrash);
-router.put("/restore/:noteId", restoreTrash);
+router.get("/alltrash", auth, getTrash);
+router.delete("/delete/:noteId", auth, deleteTrash);
+router.put("/restore/:noteId", auth, restoreTrash);
 
 module.exports = router;
